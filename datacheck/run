@@ -25,7 +25,7 @@ fi
 set `vnstat -d | grep "$(date +%D)" | awk '{print $8*100,$9}'`
 
 # If usage over threshold, send email and log
-if [ $1 -gt $THRESHOLD ] && [ $2 != "KiB" ]; then
+if [ $1 -gt $THRESHOLD -a $2 != "KiB" ] || [ $2 != "KiB" -a $2 != "MiB" ]; then
   AMOUNT=$(($1/100))
   DEC=$(($1-($AMOUNT*100)))
   AMOUNT=`printf "%'.0f.%'2.0f" $AMOUNT $DEC`
