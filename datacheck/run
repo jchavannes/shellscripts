@@ -1,0 +1,38 @@
+#!/bin/bash
+
+LC_NUMERIC="en_US.UTF-8"
+
+if [[ $1 =~ ^[0-9]+$ ]] && [ $1 -gt 0 ]; then
+  THRESHOLD=$1
+else
+  THRESHOLD=50
+fi
+THRESHOLD=$(($THRESHOLD*100))
+
+# Counts how many times threshold has been triggered
+# Prevents multiple notifications for same threshold
+PREV=`cat log | grep "$(date +%D)" | awk '{print $1}' | uniq -c | awk '{print $1}'`
+
+if [[ $PREV =~ ^[0-9]+$ ]] && [ $PREV -gt 0 ]; then
+  THRESHOLD=$(($THRESHOLD*($PREV+1)))
+fi
+
+set `vnstat -d | grep "$(date +%D)" | awk '{print $8*100,$9}'`
+
+if [ $1 -gt $THRESHOLD ] && [ $2 != "KiB" ]; then
+  AMOUNT=$(($1/100))
+  DEC=$(($1-($AMOUNT*100)))
+  AMOUNT=`printf "%'.0f.%'2.0f" $AMOUNT $DEC`
+  THRESHOLD=$(($THRESHOLD/100))
+  DATE=`date +%D`
+  TIME=`date +%r`
+  echo "Subject: Daily bandwidth usage - $DATE
+From: notifications@jchavannes.com
+To: jason.chavannes@gmail.com
+Bandwidth usage currently at $AMOUNT $2 (Threshold set at $THRESHOLD MiB).
+
+Generated on $DATE at $TIME.
+  " | sendmail "jason.chavannes@gmail.com"
+  echo "$DATE, $TIME, $AMOUNT $2, $THRESHOLD MiB" >> log
+fi
+
