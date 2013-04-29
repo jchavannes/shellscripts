@@ -14,7 +14,7 @@ fi
 THRESHOLD=$(($THRESHOLD*100))
 
 # Count how many times notification has been triggered
-PREV=`cat log | grep "$(date +%D)" | awk '{print $1}' | uniq -c | awk '{print $1}'`
+PREV=`test -f log && cat log | grep "$(date +%D)" | awk '{print $1}' | uniq -c | awk '{print $1}'`
 
 # If notification has been triggered, multiply threshold
 if [[ $PREV =~ ^[0-9]+$ ]] && [ $PREV -gt 0 ]; then
