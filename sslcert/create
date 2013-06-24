@@ -1,6 +1,9 @@
 #!/usr/bin/expect -f
 
-spawn openssl req -new -newkey rsa:2048 -nodes -keyout /etc/apache2/ssl/wantlistapp-star.key -out /etc/apache2/ssl/wantlistapp-star.crt
+set keyfile "/etc/apache2/ssl/wantlistapp-star.key"
+set certfile "/etc/apache2/ssl/wantlistapp-star.crt"
+
+spawn openssl req -new -newkey rsa:2048 -nodes -keyout $keyfile -out $certfile
 
 expect "Country"
 send -- "US\r"
