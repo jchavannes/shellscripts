@@ -1,0 +1,33 @@
+#!/usr/bin/expect -f
+
+spawn openssl req -new -newkey rsa:2048 -nodes -keyout /etc/apache2/ssl/wantlistapp-star.key -out /etc/apache2/ssl/wantlistapp-star.crt
+
+expect "Country"
+send -- "US\r"
+
+expect "State"
+send -- "California\r"
+
+expect "Locality"
+send -- "San Francisco\r"
+
+expect "Organization Name"
+send -- "Wantlist\r"
+
+expect "Organizational Unit"
+send -- "\r"
+
+expect "Common Name"
+send -- "*.wantlistapp.com\r"
+
+expect "Email Address"
+send -- "jason.chavannes@gmail.com\r"
+
+expect "password"
+send -- "\r"
+
+expect "company"
+send -- "\r"
+
+expect eof
+
