@@ -16,6 +16,7 @@ THRESHOLD=$(($THRESHOLD*100))
 
 # Count how many times notification has been triggered
 PREV=`test -f $LOG_FILE && cat $LOG_FILE | grep "$(date +%D)" | awk '{print $1}' | uniq -c | awk '{print $1}'`
+UNITS=`test -f $LOG_FILE && tail -n 1 $LOG_FILE | awk '{print $5}' | cut -c1-3`
 
 # If notification has been triggered, multiply threshold
 if [[ $PREV =~ ^[0-9]+$ ]] && [ $PREV -gt 0 ]; then
@@ -23,23 +24,37 @@ if [[ $PREV =~ ^[0-9]+$ ]] && [ $PREV -gt 0 ]; then
 fi
 
 # Get current daily usage
-set `vnstat -d | grep "$(date +%D)" | awk '{print $8*100,$9}'`
+set `vnstat -d | grep "$(date +%D)" | awk '{print $8*100,$9,$8}'`
+
+echo "$3 $2"
+
+
+if [ "$2" = "GiB" ]; then
+  CURRENT=$(($1*1000))
+else
+  CURRENT=$1
+fi
 
 # If usage over threshold, send email and log
-if [ $1 -gt $THRESHOLD -a $2 != "KiB" ] || [ $2 != "KiB" -a $2 != "MiB" ]; then
-  AMOUNT=$(($1/100))
-  DEC=$(($1-($AMOUNT*100)))
-  AMOUNT=`printf "%'.0f.%02.0f" $AMOUNT $DEC`
+if [ $CURRENT -gt $THRESHOLD -a "$2" != "KiB" ]; then
   THRESHOLD=$(($THRESHOLD/100))
   DATE=`date +%D`
   TIME=`date +%r`
+  if [ $THRESHOLD -gt 999 ]; then
+    THRESHOLD=`echo "scale=2;$THRESHOLD/1000" | bc`
+  else
+    UNITS="MiB"
+  fi
   echo "Subject: Daily bandwidth usage - $DATE
 From: notifications@jchavannes.com
 To: jason.chavannes@gmail.com
-Bandwidth usage currently at $AMOUNT $2 (Threshold is $THRESHOLD MiB).
+Bandwidth usage currently at $3 $2 (Threshold is $THRESHOLD $UNITS).
 
 Generated on $DATE at $TIME.
   " | sendmail "jason.chavannes@gmail.com"
-  echo "$DATE, $TIME, $AMOUNT $2, $THRESHOLD MiB" >> $LOG_FILE
+  echo "$DATE, $TIME, $3 $2, $THRESHOLD $UNITS" >> $LOG_FILE
+  echo "Mail sent!"
+else
+  echo "No alert."
 fi
 
